@@ -76,16 +76,12 @@
 }
 
 - (BOOL)isText {
-    NSString *type = [[self HTTPURLResponse] MIMEType] ?: @"text/plain";
-    if ([@[ @"application/x-www-form-urlencoded" ] containsObject:type]) {
-        return YES;
+    NSString *type = [self.headerFields objectForKey:@"Content-Type"] ?: @"text/plain";
+    NSArray *types = @[ @"text/plain", @"text/html", @"application/json", @"application/xml", @"application/vnd.alertme.zoo-6.1+json" ];
+    for (NSString *textType in types) {
+        if ([type rangeOfString:textType].location != NSNotFound) return YES;
     }
-    CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, (__bridge CFStringRef)type, NULL);
-    BOOL isText = UTTypeConformsTo(uti, kUTTypeText);
-    if (uti) {
-        CFRelease(uti);
-    }
-    return isText;
+    return NO;
 }
 
 - (void)setBody:(id)body
@@ -100,13 +96,11 @@
 }
 
 - (NSString *)body {
-    return [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
-    /*
     if ([self isText]) {
         return [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
     } else {
         return [self.data base64Encoding];
-    }*/
+    }
 }
 
 - (id)JSON {
